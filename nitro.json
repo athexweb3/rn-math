@@ -1,0 +1,23 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": [
+    "rnmath"
+  ],
+  "ios": {
+    "iosModuleName": "NitroRnMath"
+  },
+  "android": {
+    "androidNamespace": [
+      "rnmath"
+    ],
+    "androidCxxLibName": "NitroRnMath"
+  },
+  "autolinking": {
+    "Math" : {
+      "cpp": "HybridMath"
+    }
+  },
+  "ignorePaths": [
+    "**/node_modules"
+  ]
+}

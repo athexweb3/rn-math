@@ -1,0 +1,82 @@
+.
+├── NitroRnMath.podspec
+├── README.md
+├── android
+│   ├── CMakeLists.txt
+│   ├── build.gradle
+│   ├── fix-prefab.gradle
+│   ├── gradle.properties
+│   └── src
+│       └── main
+│           ├── AndroidManifest.xml
+│           ├── cpp
+│           │   └── cpp-adapter.cpp
+│           └── java
+│               └── com
+│                   └── margelo
+│                       └── nitro
+│                           └── rnmath
+│                               └── NitroRnMathPackage.kt
+├── babel.config.js
+├── cpp
+│   ├── HybridMath.cpp
+│   ├── HybridMath.hpp
+│   ├── algebra
+│   │   ├── LinearAlgebra.cpp
+│   │   ├── MatrixOperations.cpp
+│   │   └── VectorOperations.cpp
+│   ├── ml
+│   │   └── MachineLearning.cpp
+│   ├── signal
+│   │   └── SignalProcessing.cpp
+│   ├── statistics
+│   │   ├── BasicStatistics.cpp
+│   │   ├── ProbabilityDistributions.cpp
+│   │   └── RandomGeneration.cpp
+│   └── utils
+│       └── MathUtils.cpp
+├── ios
+│   └── Bridge.h
+├── lib
+│   ├── index.d.ts
+│   ├── index.js
+│   └── specs
+│       ├── Math.nitro.d.ts
+│       └── Math.nitro.js
+├── nitro.json
+├── nitrogen
+│   └── generated
+│       ├── android
+│       │   ├── NitroRnMath+autolinking.cmake
+│       │   ├── NitroRnMath+autolinking.gradle
+│       │   ├── NitroRnMathOnLoad.cpp
+│       │   ├── NitroRnMathOnLoad.hpp
+│       │   └── kotlin
+│       │       └── com
+│       │           └── margelo
+│       │               └── nitro
+│       │                   └── rnmath
+│       │                       └── NitroRnMathOnLoad.kt
+│       ├── ios
+│       │   ├── NitroRnMath+autolinking.rb
+│       │   ├── NitroRnMath-Swift-Cxx-Bridge.cpp
+│       │   ├── NitroRnMath-Swift-Cxx-Bridge.hpp
+│       │   ├── NitroRnMath-Swift-Cxx-Umbrella.hpp
+│       │   ├── NitroRnMathAutolinking.mm
+│       │   └── NitroRnMathAutolinking.swift
+│       └── shared
+│           └── c++
+│               ├── HybridMathSpec.cpp
+│               └── HybridMathSpec.hpp
+├── package-lock.json
+├── package.json
+├── project-tree.txt
+├── react-native.config.js
+├── src
+│   ├── index.ts
+│   └── specs
+│       └── Math.nitro.ts
+├── tsconfig.json
+└── tsconfig.tsbuildinfo
+
+32 directories, 48 files
