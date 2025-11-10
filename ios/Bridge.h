@@ -2,7 +2,7 @@
 //  Bridge.h
 //  NitroRnMath
 //
-//  Created by Marc Rousavy on 22.07.24.
+//  Created by Athex Web3 on 09.11.25
 //
 
 #pragma once

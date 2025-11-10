@@ -4,13 +4,13 @@
     "rnmath"
   ],
   "ios": {
-    "iosModuleName": "NitroRnMath"
+    "iosModuleName": "RnMath"
   },
   "android": {
     "androidNamespace": [
       "rnmath"
     ],
-    "androidCxxLibName": "NitroRnMath"
+    "androidCxxLibName": "RnMath"
   },
   "autolinking": {
     "Math" : {
