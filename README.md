@@ -1,5 +1,4 @@
-# rn-math
-
+<a> <picture> <source media="(prefers-color-scheme: dark)" srcset="./docs/assets/banner.png" /> <source media="(prefers-color-scheme: light)" srcset="./docs/assets/banner.png" /> <img alt="React Native Math" src="./docs/assets/banner.png" /> </picture> </a> <br />
 
 > **rn-math** — an experimental, native-backed math engine for React Native.
 
