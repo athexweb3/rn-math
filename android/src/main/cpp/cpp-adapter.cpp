@@ -1,5 +1,5 @@
 #include <jni.h>
-#include "NitroRnMathOnLoad.hpp"
+#include "RnMathOnLoad.hpp"
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
   return margelo::nitro::rnmath::initialize(vm);

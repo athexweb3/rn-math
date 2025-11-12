@@ -1,286 +1,255 @@
-import React, { useState, useEffect } from "react";
-import { Text, View, StyleSheet, ScrollView, Dimensions } from "react-native";
-import MathLibrary from "rn-math";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Text,
+  View,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  ActivityIndicator,
+  Pressable
+} from "react-native";
+import MathLib from "rn-math";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
-// Define constants at the top level
-const MATRIX_SIZE = 50;
+// Configurable constants
+const MATRIX_SIZE = 300;
 const VECTOR_SIZE = 1000;
 const STATS_DATA_SIZE = 1000;
 const ML_SIZE = 100;
 
-export default function Index() {
+const formatMs = (v) => (typeof v === "number" && v >= 0 ? `${v.toFixed(1)} ms` : "N/A");
+const safeNumberToFixed = (v, digits = 4) =>
+  typeof v === "number" && Number.isFinite(v) ? v.toFixed(digits) : "N/A";
+
+export default function BenchmarkScreen() {
   const [results, setResults] = useState({});
   const [iterations, setIterations] = useState(100);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const runSuperComplexBenchmark = () => {
-    const startTime = performance.now();
-    
-    try {
-      setError(null);
-      setLoading(true);
-
-      // 🚀 SUPER COMPLEX MATHEMATICAL OPERATIONS
-
-      // 1. Large Matrix Operations
-      const largeMatrix = Array(MATRIX_SIZE).fill(0).map(() => 
-        Array(MATRIX_SIZE).fill(0).map(() => Math.random() * 100)
-      );
-      
-      // 2. Multiple Matrix Multiplications
-      const matrixOpsStart = performance.now();
-      let matrixResult;
-      for (let i = 0; i < Math.min(iterations, 10); i++) {
-        matrixResult = MathLibrary.algebra.matrix.mul(largeMatrix, largeMatrix);
-      }
-      const matrixOpsTime = performance.now() - matrixOpsStart;
-
-      // 3. Complex Number Computations
-      const complexOpsStart = performance.now();
-      let complexResult = [1, 0];
-      for (let i = 0; i < iterations; i++) {
-        complexResult = multiplyComplexJS(
-          complexResult, 
-          [Math.cos(i * 0.01), Math.sin(i * 0.01)]
-        );
-      }
-      const complexOpsTime = performance.now() - complexOpsStart;
-
-      // 4. Large Vector Operations
-      const largeVector = Array(VECTOR_SIZE).fill(0).map(() => Math.random() * 100);
-      const vectorOpsStart = performance.now();
-      const vectorNorm = MathLibrary.algebra.vector.norm(largeVector);
-      const vectorMean = MathLibrary.algebra.vector.mean(largeVector);
-      const vectorStd = MathLibrary.algebra.vector.std(largeVector);
-      const vectorOpsTime = performance.now() - vectorOpsStart;
-
-      // 5. Statistical Analysis on Large Dataset
-      const statsData = Array(STATS_DATA_SIZE).fill(0).map(() => Math.random() * 1000);
-      const statsStart = performance.now();
-      const stats = {
-        mean: MathLibrary.statistics.mean(statsData),
-        variance: MathLibrary.statistics.variance(statsData),
-        std: MathLibrary.statistics.std(statsData)
-      };
-      const statsTime = performance.now() - statsStart;
-
-      // 6. Machine Learning - Linear Regression (FIXED: Use single feature)
-      let mlTime = 0;
-      let regression = null;
-      try {
-        // Use single feature per sample as required by the implementation
-        const mlX = Array(ML_SIZE).fill(0).map(() => [Math.random() * 100]); // Single feature
-        const mlY = Array(ML_SIZE).fill(0).map((_, i) => 2 * mlX[i][0] + Math.random() * 10);
-        const mlStart = performance.now();
-        regression = MathLibrary.ml.linearRegression(mlX, mlY);
-        mlTime = performance.now() - mlStart;
-      } catch (mlError) {
-        console.log("Linear regression failed:", mlError.message);
-        mlTime = -1; // Mark as failed but continue benchmark
-      }
-
-      // 7. Advanced Mathematical Functions
-      const advancedStart = performance.now();
-      let advancedResults = {};
-      for (let i = 0; i < Math.min(iterations, 10); i++) {
-        advancedResults = {
-          factorial: MathLibrary.utils.factorial(5),
-          combinations: MathLibrary.utils.nCr(8, 3),
-          gcd: MathLibrary.utils.gcd(48, 18),
-          lcm: MathLibrary.utils.lcm(12, 18)
-        };
-      }
-      const advancedTime = performance.now() - advancedStart;
-
-      // 🎯 JAVASCRIPT IMPLEMENTATIONS FOR COMPARISON
-
-      // JS Matrix Multiplication
-      const jsMatrixStart = performance.now();
-      let jsMatrixResult;
-      for (let i = 0; i < Math.min(iterations, 10); i++) {
-        jsMatrixResult = multiplyMatricesJS(largeMatrix, largeMatrix);
-      }
-      const jsMatrixTime = performance.now() - jsMatrixStart;
-
-      // JS Vector Operations
-      const jsVectorStart = performance.now();
-      const jsVectorNorm = vectorNormJS(largeVector);
-      const jsVectorMean = vectorMeanJS(largeVector);
-      const jsVectorStd = vectorStdJS(largeVector);
-      const jsVectorTime = performance.now() - jsVectorStart;
-
-      // JS Statistics
-      const jsStatsStart = performance.now();
-      const jsStats = {
-        mean: meanJS(statsData),
-        variance: varianceJS(statsData),
-        std: stdJS(statsData)
-      };
-      const jsStatsTime = performance.now() - jsStatsStart;
-
-      // JS Linear Regression
-      let jsMLTime = 0;
-      let jsRegression = null;
-      try {
-        const mlX = Array(ML_SIZE).fill(0).map(() => Math.random() * 100); // 1D array for JS
-        const mlY = Array(ML_SIZE).fill(0).map((_, i) => 2 * mlX[i] + Math.random() * 10);
-        const jsMLStart = performance.now();
-        jsRegression = linearRegressionJS(mlX, mlY);
-        jsMLTime = performance.now() - jsMLStart;
-      } catch (jsMLError) {
-        console.log("JS linear regression failed:", jsMLError.message);
-        jsMLTime = -1;
-      }
-
-      const totalTime = performance.now() - startTime;
-
-      setResults({
-        // Native Times
-        matrixOpsTime,
-        complexOpsTime,
-        vectorOpsTime,
-        statsTime,
-        mlTime,
-        advancedTime,
-        
-        // JavaScript Times
-        jsMatrixTime,
-        jsComplexTime: complexOpsTime,
-        jsVectorTime,
-        jsStatsTime,
-        jsMLTime,
-        
-        // Results
-        vectorNorm,
-        jsVectorNorm,
-        stats,
-        jsStats,
-        regression,
-        jsRegression,
-        advancedResults,
-        totalTime,
-        complexResult
-      });
-
-    } catch (error) {
-      console.error("Benchmark error:", error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // JavaScript implementations for comparison
-  const multiplyMatricesJS = (a, b) => {
-    const aRows = a.length, aCols = a[0].length, bCols = b[0].length;
-    const result = new Array(aRows);
-    for (let i = 0; i < aRows; i++) {
-      result[i] = new Array(bCols).fill(0);
-      for (let j = 0; j < bCols; j++) {
-        for (let k = 0; k < aCols; k++) {
-          result[i][j] += a[i][k] * b[k][j];
-        }
-      }
-    }
-    return result;
-  };
-
-  const multiplyComplexJS = (a, b) => {
-    return [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
-  };
-
-  const vectorNormJS = (v) => {
-    return Math.sqrt(v.reduce((sum, x) => sum + x * x, 0));
-  };
-
-  const vectorMeanJS = (v) => {
-    return v.reduce((sum, x) => sum + x, 0) / v.length;
-  };
-
-  const vectorStdJS = (v) => {
-    const mean = vectorMeanJS(v);
-    return Math.sqrt(v.reduce((sum, x) => sum + (x - mean) ** 2, 0) / v.length);
-  };
-
-  const meanJS = (data) => {
-    return data.reduce((a, b) => a + b) / data.length;
-  };
-
-  const varianceJS = (data) => {
-    const mean = meanJS(data);
-    return meanJS(data.map(x => (x - mean) ** 2));
-  };
-
-  const stdJS = (data) => {
-    return Math.sqrt(varianceJS(data));
-  };
-
-  const linearRegressionJS = (x, y) => {
-    const n = x.length;
-    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-    
-    for (let i = 0; i < n; i++) {
-      sumX += x[i];
-      sumY += y[i];
-      sumXY += x[i] * y[i];
-      sumXX += x[i] * x[i];
-    }
-    
-    const denominator = n * sumXX - sumX * sumX;
-    if (denominator === 0) throw new Error("Cannot compute regression for collinear data");
-    
-    const slope = (n * sumXY - sumX * sumY) / denominator;
-    const intercept = (sumY - slope * sumX) / n;
-    
-    return [slope, intercept];
-  };
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    runSuperComplexBenchmark();
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const runSuperComplexBenchmark = useCallback(() => {
+    setError(null);
+    setLoading(true);
+
+    // Give RN a tick to render loading indicator before heavy work
+    setTimeout(() => {
+      const perfNow = typeof performance !== "undefined" && performance.now ? performance.now : () => Date.now();
+      const startTime = perfNow();
+
+      try {
+        // 1. Build a large matrix
+        const largeMatrix = Array.from({ length: MATRIX_SIZE }, () =>
+          Array.from({ length: MATRIX_SIZE }, () => Math.random() * 100)
+        );
+
+        // 2. Native matrix multiplications
+        const matrixOpsStart = perfNow();
+        let matrixResult = null;
+        const matrixLoops = Math.min(iterations, 10);
+        for (let i = 0; i < matrixLoops; i++) {
+          matrixResult = MathLib.algebra.matrix.mul(largeMatrix, largeMatrix);
+        }
+        const matrixOpsTime = perfNow() - matrixOpsStart;
+
+        // 3. Complex number multiplications (JS baseline)
+        const complexOpsStart = perfNow();
+        let complexResult = [1, 0];
+        for (let i = 0; i < iterations; i++) {
+          complexResult = multiplyComplexJS(
+            complexResult,
+            [Math.cos(i * 0.01), Math.sin(i * 0.01)]
+          );
+        }
+        const complexOpsTime = perfNow() - complexOpsStart;
+
+        // 4. Large vector (native)
+        const largeVector = Array.from({ length: VECTOR_SIZE }, () => Math.random() * 100);
+        const vectorOpsStart = perfNow();
+        const vectorNorm = safeCall(() => MathLib.algebra.vector.norm(largeVector), null);
+        const vectorMean = safeCall(() => MathLib.algebra.vector.mean(largeVector), null);
+        const vectorStd = safeCall(() => MathLib.algebra.vector.std(largeVector), null);
+        const vectorOpsTime = perfNow() - vectorOpsStart;
+
+        // 5. Statistics (native)
+        const statsData = Array.from({ length: STATS_DATA_SIZE }, () => Math.random() * 1000);
+        const statsStart = perfNow();
+        const stats = {
+          mean: safeCall(() => MathLib.statistics.mean(statsData), null),
+          variance: safeCall(() => MathLib.statistics.variance(statsData), null),
+          std: safeCall(() => MathLib.statistics.std(statsData), null),
+        };
+        const statsTime = perfNow() - statsStart;
+
+        // 6. Machine learning - native linear regression (single feature per sample)
+        let mlTime = -1;
+        let regression = null;
+        try {
+          const mlX = Array.from({ length: ML_SIZE }, () => [Math.random() * 100]); // single feature
+          const mlY = Array.from({ length: ML_SIZE }, (_, i) => 2 * mlX[i][0] + Math.random() * 10);
+          const mlStart = perfNow();
+          regression = MathLib.ml.linearRegression(mlX, mlY);
+          mlTime = perfNow() - mlStart;
+        } catch (mlErr) {
+          mlTime = -1;
+        }
+
+        // 7. Advanced math functions (native)
+        const advancedStart = perfNow();
+        const advancedResults = {
+          factorial: safeCall(() => MathLib.utils.factorial(5), null),
+          combinations: safeCall(() => MathLib.utils.nCr(8, 3), null),
+          gcd: safeCall(() => MathLib.utils.gcd(48, 18), null),
+          lcm: safeCall(() => MathLib.utils.lcm(12, 18), null),
+        };
+        const advancedTime = perfNow() - advancedStart;
+
+        // ------------------------------
+        // JavaScript baselines
+        // ------------------------------
+        // JS matrix multiplication
+        const jsMatrixStart = perfNow();
+        let jsMatrixResult = null;
+        for (let i = 0; i < matrixLoops; i++) {
+          jsMatrixResult = multiplyMatricesJS(largeMatrix, largeMatrix);
+        }
+        const jsMatrixTime = perfNow() - jsMatrixStart;
+
+        // JS vector operations
+        const jsVectorStart = perfNow();
+        const jsVectorNorm = vectorNormJS(largeVector);
+        const jsVectorMean = vectorMeanJS(largeVector);
+        const jsVectorStd = vectorStdJS(largeVector);
+        const jsVectorTime = perfNow() - jsVectorStart;
+
+        // JS statistics
+        const jsStatsStart = perfNow();
+        const jsStats = {
+          mean: meanJS(statsData),
+          variance: varianceJS(statsData),
+          std: stdJS(statsData),
+        };
+        const jsStatsTime = perfNow() - jsStatsStart;
+
+        // JS linear regression
+        let jsMLTime = -1;
+        let jsRegression = null;
+        try {
+          const mlX1D = Array.from({ length: ML_SIZE }, () => Math.random() * 100);
+          const mlY1D = Array.from({ length: ML_SIZE }, (_, i) => 2 * mlX1D[i] + Math.random() * 10);
+          const jsMLStart = perfNow();
+          jsRegression = linearRegressionJS(mlX1D, mlY1D);
+          jsMLTime = perfNow() - jsMLStart;
+        } catch (err) {
+          jsMLTime = -1;
+        }
+
+        const totalTime = perfNow() - startTime;
+
+        if (!mountedRef.current) return;
+
+        setResults({
+          // native
+          matrixOpsTime,
+          complexOpsTime,
+          vectorOpsTime,
+          statsTime,
+          mlTime,
+          advancedTime,
+
+          // js
+          jsMatrixTime,
+          jsComplexTime: complexOpsTime,
+          jsVectorTime,
+          jsStatsTime,
+          jsMLTime,
+
+          // values/results
+          vectorNorm,
+          jsVectorNorm,
+          vectorMean,
+          vectorStd,
+          jsVectorMean,
+          jsVectorStd,
+          stats,
+          jsStats,
+          regression,
+          jsRegression,
+          advancedResults,
+          totalTime,
+          complexResult,
+        });
+      } catch (err) {
+        if (mountedRef.current) {
+          setError(err.message || "Unknown benchmark error");
+        }
+      } finally {
+        if (mountedRef.current) {
+          setLoading(false);
+        }
+      }
+    }, 50);
   }, [iterations]);
 
-  // Safe performance data with fallbacks
+  // Run on mount and when iterations change
+  useEffect(() => {
+    runSuperComplexBenchmark();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runSuperComplexBenchmark]);
+
+  // UI helper: compute performance data for chart/list
   const performanceData = [
     {
-      category: "🧮 Matrix Operations",
-      nativeTime: results.matrixOpsTime || 0,
-      jsTime: results.jsMatrixTime || 0,
-      description: `${MATRIX_SIZE}×${MATRIX_SIZE} matrix multiplication`
+      key: "matrix",
+      category: "Matrix operations",
+      nativeTime: results.matrixOpsTime,
+      jsTime: results.jsMatrixTime,
+      description: `${MATRIX_SIZE}×${MATRIX_SIZE} multiplication`,
     },
     {
-      category: "🔢 Complex Numbers",
-      nativeTime: results.complexOpsTime || 0,
-      jsTime: results.jsComplexTime || 0,
-      description: "Complex number multiplications"
+      key: "complex",
+      category: "Complex number multiplications",
+      nativeTime: results.complexOpsTime,
+      jsTime: results.jsComplexTime,
+      description: "Complex arithmetic workload",
     },
     {
-      category: "📊 Vector Operations",
-      nativeTime: results.vectorOpsTime || 0,
-      jsTime: results.jsVectorTime || 0,
-      description: `${VECTOR_SIZE} element vector analysis`
+      key: "vector",
+      category: "Vector analysis",
+      nativeTime: results.vectorOpsTime,
+      jsTime: results.jsVectorTime,
+      description: `${VECTOR_SIZE} element vector computations`,
     },
     {
-      category: "📈 Statistical Analysis",
-      nativeTime: results.statsTime || 0,
-      jsTime: results.jsStatsTime || 0,
-      description: `${STATS_DATA_SIZE} data points statistics`
+      key: "statistics",
+      category: "Statistical computations",
+      nativeTime: results.statsTime,
+      jsTime: results.jsStatsTime,
+      description: `${STATS_DATA_SIZE} samples statistics`,
     },
     {
-      category: "🤖 ML Regression",
-      nativeTime: results.mlTime || 0,
-      jsTime: results.jsMLTime || 0,
-      description: `${ML_SIZE} samples linear regression`
-    }
-  ].filter(item => (item.nativeTime || 0) > 0 && (item.jsTime || 0) > 0);
+      key: "ml",
+      category: "Linear regression",
+      nativeTime: results.mlTime,
+      jsTime: results.jsMLTime,
+      description: `${ML_SIZE} sample linear regression`,
+    },
+  ].filter((p) => (typeof p.nativeTime === "number" && p.nativeTime >= 0) && (typeof p.jsTime === "number" && p.jsTime >= 0));
 
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.loadingText}>🚀 Running Ultimate Math Benchmark...</Text>
-        <Text style={styles.loadingSubtext}>Testing {iterations} iterations</Text>
+        <ActivityIndicator size="large" color={stylesColors.primary} />
+        <Text style={styles.loadingText}>Running benchmark...</Text>
+        <Text style={styles.loadingSubtext}>Iterations: {iterations}</Text>
       </View>
     );
   }
@@ -288,519 +257,520 @@ export default function Index() {
   if (error) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.errorTitle}>Error Running Benchmark</Text>
+        <Text style={styles.errorTitle}>Benchmark error</Text>
         <Text style={styles.errorText}>{error}</Text>
-        <Text style={styles.retryButton} onPress={runSuperComplexBenchmark}>
-          🔄 Retry Benchmark
-        </Text>
+        <Pressable style={styles.primaryButton} onPress={runSuperComplexBenchmark}>
+          <Text style={styles.primaryButtonText}>Retry</Text>
+        </Pressable>
       </View>
     );
   }
 
+  const nativeWins = performanceData.filter((p) => p.nativeTime < p.jsTime).length;
+  const jsWins = performanceData.filter((p) => p.jsTime < p.nativeTime).length;
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🚀 Ultimate Math Benchmark</Text>
-      <Text style={styles.subtitle}>Native C++ vs JavaScript Performance</Text>
+      <Text style={styles.title}>Numeric Benchmark</Text>
+      <Text style={styles.subtitle}>Comparing native math library vs JavaScript</Text>
 
       <View style={styles.controlPanel}>
-        <Text style={styles.controlLabel}>Operations Scale: {iterations} iterations</Text>
-        <View style={styles.buttonRow}>
-          {[10, 50, 100, 500].map(count => (
-            <Text
+        <Text style={styles.controlLabel}>Iterations: {iterations}</Text>
+        <View style={styles.iterationButtons}>
+          {[10, 50, 100, 500].map((count) => (
+            <Pressable
               key={count}
               style={[
                 styles.iterButton,
-                iterations === count && styles.iterButtonActive
+                iterations === count && styles.iterButtonActive,
               ]}
               onPress={() => setIterations(count)}
             >
-              {count}
-            </Text>
+              <Text style={[styles.iterButtonText, iterations === count && styles.iterButtonTextActive]}>
+                {count}
+              </Text>
+            </Pressable>
           ))}
         </View>
       </View>
 
-      <ScrollView style={styles.resultsContainer}>
-        {/* Overall Performance Summary */}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.summarySection}>
-          <Text style={styles.summaryTitle}>🏆 Overall Performance</Text>
-          <View style={styles.summaryGrid}>
+          <View style={styles.summaryRow}>
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryValue}>
-                {performanceData.filter(p => (p.nativeTime || 0) < (p.jsTime || 0)).length}
-              </Text>
-              <Text style={styles.summaryLabel}>Native Wins</Text>
+              <Text style={styles.summaryValue}>{nativeWins}</Text>
+              <Text style={styles.summaryLabel}>Native wins</Text>
+            </View>
+            <View style={styles.summaryCard}>
+              <Text style={styles.summaryValue}>{jsWins}</Text>
+              <Text style={styles.summaryLabel}>JS wins</Text>
             </View>
             <View style={styles.summaryCard}>
               <Text style={styles.summaryValue}>
-                {performanceData.filter(p => (p.jsTime || 0) < (p.nativeTime || 0)).length}
+                {typeof results.totalTime === "number" ? `${results.totalTime.toFixed(0)} ms` : "N/A"}
               </Text>
-              <Text style={styles.summaryLabel}>JS Wins</Text>
-            </View>
-            <View style={styles.summaryCard}>
-              <Text style={styles.summaryValue}>
-                {results.totalTime ? `${results.totalTime.toFixed(0)}ms` : '...'}
-              </Text>
-              <Text style={styles.summaryLabel}>Total Time</Text>
+              <Text style={styles.summaryLabel}>Total time</Text>
             </View>
           </View>
         </View>
 
-        {/* Performance Comparison Chart */}
-        <View style={styles.chartSection}>
-          <Text style={styles.sectionTitle}>📊 Performance Comparison</Text>
-          {performanceData.map((item, index) => {
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Performance comparison</Text>
+          {performanceData.map((item) => {
             const maxTime = Math.max(item.nativeTime || 0, item.jsTime || 0, 1);
-            const nativeWidth = ((item.nativeTime || 0) / maxTime) * 100;
-            const jsWidth = ((item.jsTime || 0) / maxTime) * 100;
-            const nativeWins = (item.nativeTime || 0) < (item.jsTime || 0);
-
+            const nativePercent = ((item.nativeTime || 0) / maxTime) * 100;
+            const jsPercent = ((item.jsTime || 0) / maxTime) * 100;
+            const nativeBetter = item.nativeTime < item.jsTime;
             return (
-              <View key={index} style={styles.chartItem}>
-                <View style={styles.chartHeader}>
-                  <Text style={styles.chartCategory}>{item.category}</Text>
-                  <Text style={styles.chartDescription}>{item.description}</Text>
+              <View key={item.key} style={styles.performanceItem}>
+                <View style={styles.performanceHeader}>
+                  <Text style={styles.performanceTitle}>{item.category}</Text>
+                  <Text style={styles.performanceSubtitle}>{item.description}</Text>
                 </View>
-                
-                <View style={styles.chartBars}>
-                  <View style={styles.barContainer}>
-                    <Text style={styles.barLabel}>Native</Text>
-                    <View style={styles.barBackground}>
-                      <View 
-                        style={[
-                          styles.barFill, 
-                          styles.nativeBar,
-                          { width: `${nativeWidth}%` }
-                        ]} 
-                      />
-                    </View>
-                    <Text style={styles.barTime}>
-                      {item.nativeTime ? `${item.nativeTime.toFixed(1)}ms` : 'N/A'}
-                    </Text>
+
+                <View style={styles.barRow}>
+                  <View style={styles.barLabel}>
+                    <Text style={styles.barLabelText}>Native</Text>
                   </View>
-                  
-                  <View style={styles.barContainer}>
-                    <Text style={styles.barLabel}>JavaScript</Text>
-                    <View style={styles.barBackground}>
-                      <View 
-                        style={[
-                          styles.barFill, 
-                          styles.jsBar,
-                          { width: `${jsWidth}%` }
-                        ]} 
-                      />
-                    </View>
-                    <Text style={styles.barTime}>
-                      {item.jsTime ? `${item.jsTime.toFixed(1)}ms` : 'N/A'}
-                    </Text>
+                  <View style={styles.barTrack}>
+                    <View style={[styles.barFill, { width: `${nativePercent}%` }]} />
+                  </View>
+                  <View style={styles.barTime}>
+                    <Text style={styles.barTimeText}>{formatMs(item.nativeTime)}</Text>
                   </View>
                 </View>
-                
-                <View style={styles.winnerBadge}>
-                  <Text style={[
-                    styles.winnerText,
-                    nativeWins ? styles.nativeWinner : styles.jsWinner
-                  ]}>
-                    {item.nativeTime && item.jsTime ? 
-                      (nativeWins ? '🏆 NATIVE WINS' : '⚡ JS WINS') : 
-                      'TEST FAILED'
-                    }
+
+                <View style={styles.barRow}>
+                  <View style={styles.barLabel}>
+                    <Text style={styles.barLabelText}>JavaScript</Text>
+                  </View>
+                  <View style={styles.barTrackAlt}>
+                    <View style={[styles.barFillAlt, { width: `${jsPercent}%` }]} />
+                  </View>
+                  <View style={styles.barTime}>
+                    <Text style={styles.barTimeText}>{formatMs(item.jsTime)}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.resultFooter}>
+                  <Text style={styles.resultFooterText}>
+                    {nativeBetter ? "Native is faster" : "JavaScript is faster"}
                   </Text>
-                  {item.nativeTime && item.jsTime && (
-                    <Text style={styles.performanceGap}>
-                      {Math.abs(item.nativeTime - item.jsTime).toFixed(1)}ms difference
-                    </Text>
-                  )}
+                  <Text style={styles.resultGapText}>
+                    {Math.abs((item.nativeTime || 0) - (item.jsTime || 0)).toFixed(1)} ms difference
+                  </Text>
                 </View>
               </View>
             );
           })}
         </View>
 
-        {/* Mathematical Results */}
-        <View style={styles.resultsSection}>
-          <Text style={styles.sectionTitle}>🔬 Mathematical Results</Text>
-          
-          <View style={styles.resultGrid}>
-            <View style={styles.resultCard}>
-              <Text style={styles.resultCardTitle}>Vector Analysis</Text>
-              <ResultRow label="Native Norm" value={results.vectorNorm?.toFixed(4)} />
-              <ResultRow label="JS Norm" value={results.jsVectorNorm?.toFixed(4)} />
-              <ResultRow label="Difference" 
-                value={results.vectorNorm && results.jsVectorNorm ? 
-                  Math.abs(results.vectorNorm - results.jsVectorNorm).toFixed(6) : '...'} 
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Numeric results</Text>
+
+          <View style={styles.resultRowBlock}>
+            <View style={styles.resultBox}>
+              <Text style={styles.resultBoxTitle}>Vector</Text>
+              <Row label="Native norm" value={safeNumberToFixed(results.vectorNorm, 6)} />
+              <Row label="JS norm" value={safeNumberToFixed(results.jsVectorNorm, 6)} />
+              <Row
+                label="Difference"
+                value={
+                  typeof results.vectorNorm === "number" && typeof results.jsVectorNorm === "number"
+                    ? Math.abs(results.vectorNorm - results.jsVectorNorm).toFixed(6)
+                    : "N/A"
+                }
               />
             </View>
-            
-            <View style={styles.resultCard}>
-              <Text style={styles.resultCardTitle}>Statistics</Text>
-              <ResultRow label="Native Mean" value={results.stats?.mean?.toFixed(4)} />
-              <ResultRow label="JS Mean" value={results.jsStats?.mean?.toFixed(4)} />
-              <ResultRow label="Native Std" value={results.stats?.std?.toFixed(4)} />
+
+            <View style={styles.resultBox}>
+              <Text style={styles.resultBoxTitle}>Statistics</Text>
+              <Row label="Native mean" value={safeNumberToFixed(results.stats?.mean, 6)} />
+              <Row label="JS mean" value={safeNumberToFixed(results.jsStats?.mean, 6)} />
+              <Row label="Native std" value={safeNumberToFixed(results.stats?.std, 6)} />
             </View>
           </View>
 
-          {/* Machine Learning Results */}
-          <View style={styles.resultGrid}>
-            {(results.regression || results.jsRegression) && (
-              <View style={styles.resultCard}>
-                <Text style={styles.resultCardTitle}>Machine Learning</Text>
-                {results.regression && (
-                  <ResultRow label="Native Coefficients" 
-                    value={results.regression.map(x => x.toFixed(3)).join(', ')} 
-                  />
-                )}
-                {results.jsRegression && (
-                  <ResultRow label="JS Coefficients" 
-                    value={results.jsRegression.map(x => x.toFixed(3)).join(', ')} 
-                  />
-                )}
-                {results.regression && results.jsRegression && (
-                  <ResultRow label="Slope Difference" 
-                    value={Math.abs(results.regression[0] - results.jsRegression[0]).toFixed(6)} 
-                  />
-                )}
-              </View>
-            )}
+          <View style={styles.resultRowBlock}>
+            <View style={styles.resultBoxFull}>
+              <Text style={styles.resultBoxTitle}>Machine learning</Text>
+              {Array.isArray(results.regression) && (
+                <Row label="Native coefficients" value={results.regression.map((n) => Number(n).toFixed(3)).join(", ")} />
+              )}
+              {Array.isArray(results.jsRegression) && (
+                <Row label="JS coefficients" value={results.jsRegression.map((n) => Number(n).toFixed(3)).join(", ")} />
+              )}
+              {Array.isArray(results.regression) && Array.isArray(results.jsRegression) && (
+                <Row label="Slope difference" value={Math.abs(results.regression[0] - results.jsRegression[0]).toFixed(6)} />
+              )}
+            </View>
+          </View>
 
-            {results.advancedResults && (
-              <View style={styles.resultCard}>
-                <Text style={styles.resultCardTitle}>Advanced Functions</Text>
-                <ResultRow label="5!" value={results.advancedResults.factorial} />
-                <ResultRow label="C(8,3)" value={results.advancedResults.combinations} />
-                <ResultRow label="gcd(48,18)" value={results.advancedResults.gcd} />
-              </View>
-            )}
+          <View style={styles.resultRowBlock}>
+            <View style={styles.resultBox}>
+              <Text style={styles.resultBoxTitle}>Advanced</Text>
+              <Row label="5!" value={`${results.advancedResults?.factorial ?? "N/A"}`} />
+              <Row label="C(8,3)" value={`${results.advancedResults?.combinations ?? "N/A"}`} />
+              <Row label="gcd(48,18)" value={`${results.advancedResults?.gcd ?? "N/A"}`} />
+            </View>
           </View>
         </View>
 
-        {/* Final Verdict */}
-        <View style={styles.verdictSection}>
-          <Text style={styles.verdictTitle}>🎯 Performance Verdict</Text>
-          
-          <View style={styles.verdictCard}>
-            <Text style={styles.verdictText}>
-              {performanceData.filter(p => (p.nativeTime || 0) < (p.jsTime || 0)).length >= 
-               performanceData.filter(p => (p.jsTime || 0) < (p.nativeTime || 0)).length
-                ? "🏆 Native C++ Library Dominates for complex mathematical operations!"
-                : "⚡ JavaScript holds its own for many operations!"}
-            </Text>
-            <Text style={styles.verdictDetails}>
-              Native won {performanceData.filter(p => (p.nativeTime || 0) < (p.jsTime || 0)).length} out of {performanceData.length} categories
-            </Text>
-          </View>
+        <View style={styles.footer}>
+          <Pressable style={styles.primaryButton} onPress={runSuperComplexBenchmark}>
+            <Text style={styles.primaryButtonText}>Run benchmark</Text>
+          </Pressable>
         </View>
-
-        {/* Run Again */}
-        <Text style={styles.refreshButton} onPress={runSuperComplexBenchmark}>
-          🔄 Run Benchmark Again
-        </Text>
       </ScrollView>
     </View>
   );
 }
 
-const ResultRow = ({ label, value }) => (
-  <View style={styles.resultRow}>
-    <Text style={styles.resultLabel}>{label}</Text>
-    <Text style={styles.resultValue} numberOfLines={1}>
-      {value !== undefined && value !== null ? value.toString() : 'N/A'}
+// ---- small helper components and pure functions ----
+
+const Row = ({ label, value }) => (
+  <View style={styles.row}>
+    <Text style={styles.rowLabel}>{label}</Text>
+    <Text style={styles.rowValue} numberOfLines={1}>
+      {value}
     </Text>
   </View>
 );
 
+const safeCall = (fn, fallback) => {
+  try {
+    return fn();
+  } catch {
+    return fallback;
+  }
+};
+
+// --- pure JS implementations for baseline comparisons ---
+const multiplyMatricesJS = (a, b) => {
+  const aRows = a.length,
+    aCols = a[0].length,
+    bCols = b[0].length;
+  const result = new Array(aRows);
+  for (let i = 0; i < aRows; i++) {
+    result[i] = new Array(bCols).fill(0);
+    for (let j = 0; j < bCols; j++) {
+      let s = 0;
+      for (let k = 0; k < aCols; k++) {
+        s += a[i][k] * b[k][j];
+      }
+      result[i][j] = s;
+    }
+  }
+  return result;
+};
+
+const multiplyComplexJS = (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+
+const vectorNormJS = (v) => Math.sqrt(v.reduce((s, x) => s + x * x, 0));
+const vectorMeanJS = (v) => v.reduce((s, x) => s + x, 0) / v.length;
+const vectorStdJS = (v) => {
+  const m = vectorMeanJS(v);
+  return Math.sqrt(v.reduce((s, x) => s + (x - m) ** 2, 0) / v.length);
+};
+
+const meanJS = (data) => data.reduce((a, b) => a + b, 0) / data.length;
+const varianceJS = (data) => meanJS(data.map((x) => (x - meanJS(data)) ** 2));
+const stdJS = (data) => Math.sqrt(varianceJS(data));
+
+const linearRegressionJS = (x, y) => {
+  const n = x.length;
+  let sumX = 0,
+    sumY = 0,
+    sumXY = 0,
+    sumXX = 0;
+  for (let i = 0; i < n; i++) {
+    sumX += x[i];
+    sumY += y[i];
+    sumXY += x[i] * y[i];
+    sumXX += x[i] * x[i];
+  }
+  const denom = n * sumXX - sumX * sumX;
+  if (denom === 0) throw new Error("Cannot compute regression for collinear data");
+  const slope = (n * sumXY - sumX * sumY) / denom;
+  const intercept = (sumY - slope * sumX) / n;
+  return [slope, intercept];
+};
+
+// ---- Styles ----
+const stylesColors = {
+  background: "#0F1724",
+  card: "#0b1016",
+  muted: "#94a3b8",
+  text: "#e6eef8",
+  primary: "#2563eb",
+  accent: "#f59e0b",
+  track: "#172033",
+  altTrack: "#162232",
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0a",
+    backgroundColor: stylesColors.background,
+    paddingTop: 20,
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#0a0a0a",
+    backgroundColor: stylesColors.background,
     padding: 20,
   },
   loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: stylesColors.text,
+  },
+  loadingSubtext: {
+    marginTop: 6,
+    fontSize: 13,
+    color: stylesColors.muted,
+  },
+  errorTitle: {
     fontSize: 20,
-    fontWeight: "bold",
-    color: "#007AFF",
+    fontWeight: "600",
+    color: "#e74c3c",
+    marginBottom: 12,
+  },
+  errorText: {
+    fontSize: 14,
+    color: stylesColors.text,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: stylesColors.text,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 13,
+    color: stylesColors.muted,
+    textAlign: "center",
+    marginBottom: 12,
+  },
+
+  controlPanel: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: stylesColors.card,
+  },
+  controlLabel: {
+    color: stylesColors.text,
+    fontSize: 13,
     marginBottom: 8,
     textAlign: "center",
   },
-  loadingSubtext: {
-    fontSize: 14,
-    color: "#cccccc",
-    textAlign: "center",
-  },
-  errorTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#e74c3c",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  errorText: {
-    fontSize: 16,
-    color: "#cccccc",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: "#007AFF",
-    color: "#ffffff",
-    padding: 16,
-    borderRadius: 8,
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginVertical: 16,
-    color: "#ffffff",
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: "center",
-    color: "#cccccc",
-    marginBottom: 20,
-  },
-  controlPanel: {
-    backgroundColor: "#1a1a1a",
-    padding: 16,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  controlLabel: {
-    fontSize: 16,
-    color: "#ffffff",
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  buttonRow: {
+  iterationButtons: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
   },
   iterButton: {
     paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: "#2a2a2a",
+    paddingHorizontal: 12,
     borderRadius: 8,
-    color: "#cccccc",
-    fontSize: 14,
-    fontWeight: "500",
+    backgroundColor: "#111827",
+    minWidth: 64,
+    alignItems: "center",
   },
   iterButtonActive: {
-    backgroundColor: "#007AFF",
+    backgroundColor: stylesColors.primary,
+  },
+  iterButtonText: {
+    color: stylesColors.muted,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  iterButtonTextActive: {
     color: "#ffffff",
   },
-  resultsContainer: {
-    flex: 1,
+
+  scrollContent: {
     paddingHorizontal: 16,
+    paddingBottom: 40,
+    paddingTop: 16,
   },
+
   summarySection: {
-    backgroundColor: "#1a1a1a",
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 16,
+    backgroundColor: stylesColors.card,
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 12,
   },
-  summaryTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#ffffff",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  summaryGrid: {
+  summaryRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
   },
   summaryCard: {
     alignItems: "center",
+    flex: 1,
   },
   summaryValue: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#007AFF",
-    marginBottom: 4,
+    fontSize: 20,
+    color: stylesColors.primary,
+    fontWeight: "700",
   },
   summaryLabel: {
     fontSize: 12,
-    color: "#888888",
+    color: stylesColors.muted,
+    marginTop: 4,
   },
-  chartSection: {
-    backgroundColor: "#1a1a1a",
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 16,
+
+  section: {
+    marginBottom: 12,
+    backgroundColor: stylesColors.card,
+    padding: 12,
+    borderRadius: 10,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#ffffff",
-    marginBottom: 16,
+    fontSize: 16,
+    fontWeight: "700",
+    color: stylesColors.text,
+    marginBottom: 10,
   },
-  chartItem: {
-    marginBottom: 20,
-    padding: 16,
-    backgroundColor: "#2a2a2a",
+
+  performanceItem: {
+    marginBottom: 12,
+    padding: 10,
+    backgroundColor: "#071020",
     borderRadius: 8,
   },
-  chartHeader: {
-    marginBottom: 12,
-  },
-  chartCategory: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#ffffff",
-    marginBottom: 4,
-  },
-  chartDescription: {
-    fontSize: 12,
-    color: "#888888",
-  },
-  chartBars: {
-    marginBottom: 12,
-  },
-  barContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  performanceHeader: {
     marginBottom: 8,
+  },
+  performanceTitle: {
+    color: stylesColors.text,
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  performanceSubtitle: {
+    color: stylesColors.muted,
+    fontSize: 12,
+  },
+
+  barRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
   },
   barLabel: {
-    width: 80,
-    fontSize: 12,
-    color: '#cccccc',
+    width: 72,
   },
-  barBackground: {
+  barLabelText: {
+    color: stylesColors.muted,
+    fontSize: 12,
+  },
+  barTrack: {
     flex: 1,
-    height: 20,
-    backgroundColor: '#3a3a3a',
-    borderRadius: 10,
+    height: 12,
+    backgroundColor: stylesColors.track,
+    borderRadius: 6,
+    overflow: "hidden",
     marginHorizontal: 8,
-    overflow: 'hidden',
+  },
+  barTrackAlt: {
+    flex: 1,
+    height: 12,
+    backgroundColor: stylesColors.altTrack,
+    borderRadius: 6,
+    overflow: "hidden",
+    marginHorizontal: 8,
   },
   barFill: {
-    height: '100%',
-    borderRadius: 10,
+    height: "100%",
+    backgroundColor: stylesColors.primary,
   },
-  nativeBar: {
-    backgroundColor: '#007AFF',
-  },
-  jsBar: {
-    backgroundColor: '#FFD700',
+  barFillAlt: {
+    height: "100%",
+    backgroundColor: stylesColors.accent,
   },
   barTime: {
-    width: 60,
-    fontSize: 10,
-    color: '#cccccc',
-    textAlign: 'right',
+    width: 78,
+    alignItems: "flex-end",
   },
-  winnerBadge: {
-    alignItems: 'center',
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#3a3a3a',
+  barTimeText: {
+    color: stylesColors.muted,
+    fontSize: 11,
   },
-  winnerText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 4,
+
+  resultFooter: {
+    marginTop: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
-  nativeWinner: {
-    color: '#007AFF',
+  resultFooterText: {
+    color: stylesColors.text,
+    fontSize: 12,
   },
-  jsWinner: {
-    color: '#FFD700',
+  resultGapText: {
+    color: stylesColors.muted,
+    fontSize: 12,
   },
-  performanceGap: {
-    fontSize: 10,
-    color: '#888888',
-  },
-  resultsSection: {
-    backgroundColor: "#1a1a1a",
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  resultGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  resultCard: {
-    flex: 1,
-    backgroundColor: '#2a2a2a',
-    padding: 16,
-    borderRadius: 8,
-    marginHorizontal: 4,
+
+  resultRowBlock: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 12,
   },
-  resultCardTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 8,
-  },
-  resultRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  resultLabel: {
-    fontSize: 10,
-    color: '#888888',
+  resultBox: {
     flex: 1,
-  },
-  resultValue: {
-    fontSize: 10,
-    color: '#ffffff',
-    fontFamily: 'monospace',
-    flex: 1,
-    textAlign: 'right',
-  },
-  verdictSection: {
-    backgroundColor: "#1a1a1a",
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  verdictTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#ffffff",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  verdictCard: {
-    backgroundColor: '#2a2a2a',
-    padding: 16,
+    padding: 10,
+    marginRight: 8,
+    backgroundColor: "#071824",
     borderRadius: 8,
   },
-  verdictText: {
-    fontSize: 16,
-    color: '#ffffff',
-    textAlign: 'center',
-    fontWeight: '500',
+  resultBoxFull: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: "#071824",
+    borderRadius: 8,
+  },
+  resultBoxTitle: {
+    color: stylesColors.text,
+    fontWeight: "600",
     marginBottom: 8,
   },
-  verdictDetails: {
+
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  rowLabel: {
+    color: stylesColors.muted,
     fontSize: 12,
-    color: '#cccccc',
-    textAlign: 'center',
+    flex: 1,
   },
-  refreshButton: {
-    backgroundColor: "#007AFF",
-    color: "#ffffff",
-    textAlign: "center",
-    padding: 16,
+  rowValue: {
+    color: stylesColors.text,
+    fontSize: 12,
+    textAlign: "right",
+    flex: 1,
+  },
+
+  footer: {
+    marginTop: 8,
+    alignItems: "center",
+  },
+  primaryButton: {
+    backgroundColor: stylesColors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
     borderRadius: 8,
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 20,
+    minWidth: Math.min(320, width - 48),
+    alignItems: "center",
+  },
+  primaryButtonText: {
+    color: "#ffffff",
+    fontWeight: "700",
   },
 });

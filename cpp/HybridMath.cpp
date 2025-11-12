@@ -5,11 +5,9 @@
 #include <numeric>
 
 namespace margelo::nitro::rnmath {
+    
+HybridMath::HybridMath() : HybridObject(TAG) { }
 
-
-HybridMath::HybridMath() : HybridObject(TAG) {
-    // 
-}
 
 
 double HybridMath::add(double a, double b) { return a + b; }

@@ -1,144 +1,138 @@
-<a> <picture>
+# rn-math
 
-<source media="(prefers-color-scheme: dark)" srcset="./docs/assets/banner.png" />
-<source media="(prefers-color-scheme: light)" srcset="./docs/assets/banner.png" />
-<img alt="React Native Math" src="./docs/assets/banner.png" />
-</picture>
-</a>
 
-<br />
+> **rn-math** — an experimental, native-backed math engine for React Native.
 
-**rn-math** is a next-level math engine for React Native: accurate, optimized, and ready for complex calculations.
-
-[![npm version](https://img.shields.io/npm/v/rn-math.svg?style=flat-square)](https://www.npmjs.com/package/rn-math)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Platform: iOS & Android](https://img.shields.io/badge/Platform-iOS%20%7C%20Android-blue.svg?style=flat-square)](https://reactnative.dev)
-
-> ⚠️ **Caution:** `rn-math` is designed for **heavy, advanced mathematical computations**. For simple or low-level math, plain JavaScript is faster—using this library for trivial calculations adds unnecessary overhead.
-
-### Installation
-
-```bash
-npm install rn-math
-```
-
-## 📚 API Overview
-
-### 🧮 Linear Algebra
-
-```typescript
-
-const algebra = MathLibrary.algebra;
-const matrix = MathLibrary.algebra.matrix;
-const vector = MathLibrary.algebra.vector;
-
-// Matrix operations
-const identity = matrix.identity(3)
-const transpose = matrix.transpose(matrix)
-const determinant = MathLibrary.algebra.matrix.det(matrix)
-
-// Vector operations
-const dotProduct = vector.dot(vecA, vecB)
-const normalized = vector.normalize(vector)
-const crossProduct = vector.cross(vec3A, vec3B)
-```
-
-### 📊 Statistics & Probability
-
-```typescript
-// Descriptive statistics
-const average = MathLibrary.statistics.mean(data)
-const middle = MathLibrary.statistics.median(data)
-const spread = MathLibrary.statistics.variance(data)
-
-// Probability distributions
-const pdf = MathLibrary.probability.normal.pdf(1.5, 0, 1)
-const cdf = MathLibrary.probability.normal.cdf(1.96, 0, 1)
-
-// Random generation
-const uniform = MathLibrary.random.uniform(100, 0, 1)
-const normal = MathLibrary.random.normal(1000, 0, 1)
-```
-
-### 📡 Signal Processing
-
-```typescript
-// Fourier Transform
-const [real, imag] = MathLibrary.signal.fft(inputReal, inputImag)
-
-// Convolution
-const kernel = [0.5, 0.5]
-const convolved = MathLibrary.signal.convolve(signal, kernel)
-```
-
-### 🤖 Machine Learning
-
-```typescript
-// Linear regression
-const X = [[1], [2], [3], [4]]
-const y = [1, 2, 3, 4]
-const [slope, intercept] = MathLibrary.ml.linearRegression(X, y)
-```
-
-## 🏗️ Architecture
-
-Built with [Nitro Modules](https://github.com/margelo/nitro) for maximum performance:
-
-## 📊 Performance
-
-| Operation                         | JavaScript | RN-Math | Improvement |
-| --------------------------------- | ---------- | ------- | ----------- |
-| Matrix Multiplication (100×100)   | 1200ms     | 45ms    | 26× faster  |
-| FFT (1024 points)                 | 580ms      | 22ms    | 26× faster  |
-| Vector Dot Product (10k elements) | 15ms       | 0.8ms   | 18× faster  |
-
-## 🔧 Advanced Usage
-
-### Complex Numbers
-
-```typescript
-const c1 = MathLibrary.complex.create(3, 4) // 3 + 4i
-const c2 = MathLibrary.complex.create(1, 2) // 1 + 2i
-const sum = MathLibrary.complex.add(c1, c2) // 4 + 6i
-const magnitude = MathLibrary.complex.abs(c1) // 5
-```
-
-### Matrix Operations
-
-```typescript
-// Create special matrices
-const zeros = MathLibrary.algebra.matrix.zeros(2, 3)
-const ones = MathLibrary.algebra.matrix.ones(3, 2)
-const identity = MathLibrary.algebra.matrix.identity(4)
-
-// Advanced operations
-const trace = MathLibrary.algebra.matrix.trace(squareMatrix)
-const inverse = MathLibrary.algebra.matrix.inv(invertibleMatrix)
-```
-
-## 📖 Documentation
-
-For complete documentation, visit our documentation site:
-
-- **[Full Documentation 📚](https://rn-math.dev)**
-- **[API Reference](https://rn-math.dev/api)**
-- **[Examples Gallery](https://rn-math.dev/examples)**
-- **[Performance Guide](https://rn-math.dev/performance)**
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
+> **Status (straight):** performance is *not* meeting expectations yet. I am planning to implement **direct native GPU integration** next; once GPU support and thorough testing are in place we will target a stable release where the expected performance improvements will be delivered. Until then, do **not** rely on rn-math for large-performance gains in production.
 
 ---
 
-**Ready to supercharge your React Native math computations?**
+## ⚠️ Experimental — Read this first
+
+**Important:** `rn-math` is experimental. It exposes a C++/native-backed engine (via Nitro modules) to accelerate advanced math. That means:
+
+* It can give massive speed-ups for *large-scale* operations — but for tiny arrays or trivial math, plain JavaScript is still faster due to native call overhead.
+* API and internals may change while the project stabilizes.
+* Mobile platform differences may affect numeric behavior and performance; test on your target devices.
+* If you're building production-critical features (finance, medical, safety systems), **bench and audit** before shipping.
+
+If you’re not sure whether this lib is a fit, prefer: plain JS or a WebAssembly approach unless your workloads are large enough to amortize the native-call cost.
+
+---
+
+## Quick install
 
 ```bash
 npm install rn-math
+# or
+yarn add rn-math
 ```
 
-Start building accurate, optimized mathematical applications today! 🚀
+> Works on iOS and Android. Follow platform-specific native build steps if your environment requires extra linking (Expo/managed workflow notes below).
+
+---
+
+## When to use rn-math (short)
+
+* ⚠️ **Intended for** large-scale numerical work (large matrices, signal pipelines, ML helpers) — but: **current builds may not deliver the expected speedups.**
+* ✅ Use if you want to experiment with a native-backed math engine and help test features.
+* ❌ Do **not** use rn-math in production expecting big performance wins yet — wait for the GPU integration and stable release.
+
+---
+
+## API snapshot
+
+Minimal examples to get rolling. `MathLibrary` is the default export.
+
+### Linear algebra
+
+```ts
+const algebra = MathLibrary.algebra;
+const mA = algebra.matrix.from([[1,2],[3,4]]);
+const mB = algebra.matrix.identity(2);
+const mul = algebra.matrix.mul(mA, mB);
+const det = algebra.matrix.det(mA);
+```
+
+### Vectors
+
+```ts
+const vector = MathLibrary.algebra.vector;
+const dot = vector.dot([1,2,3], [4,5,6]);
+const norm = vector.normalize([10, 0, 0]);
+```
+
+### FFT / Signal
+
+```ts
+const [real, imag] = MathLibrary.signal.fft(realInput, imagInput);
+const convolved = MathLibrary.signal.convolve(signal, kernel);
+```
+
+### Statistics & Random
+
+```ts
+const mean = MathLibrary.statistics.mean(data);
+const normalSamples = MathLibrary.random.normal(1000, 0, 1);
+```
+
+### Machine learning helpers
+
+```ts
+const [slope, intercept] = MathLibrary.ml.linearRegression(X, y);
+```
+
+---
+
+## Performance — current status
+
+Short and honest: the library **has not** achieved the performance targets advertised earlier. Benchmarks in the repo should be considered preliminary and, in some cases, optimistic. We are pausing broad performance claims until the next major workstream — **native GPU integration** — is implemented and validated.
+
+What this means for you:
+
+* The current release may not show large speedups for many real-world workloads.
+* We will focus next on direct GPU paths (native compute on device GPUs) and careful cross-device testing.
+* A stable release with realistic performance expectations will follow after GPU integration and validation.
+
+If you depend on reliable speed improvements today, do not adopt rn-math for production workloads that require those gains. We appreciate early testers and contributors who can help validate GPU work when it lands.
+
+---
+
+## Best practices & tips
+
+* **Batch work**: Combine many small ops into larger ones when possible to amortize native call cost.
+* **Warm-up**: On first-run the native module may need to JIT/Warm caches — include warm-up runs in benchmarks.
+* **Memory**: Large matrices allocate native buffers — be mindful of memory on low-end devices.
+* **Threading**: Computation runs on native threads; avoid blocking UI by running heavier flows off the main JS loop.
+
+---
+
+## Expo / Managed workflows
+
+Using `rn-math` with Expo managed workflow may need custom dev clients or prebuilds because of native C++ modules. If you’re using the managed Expo client, prefer building a custom dev client or EAS-build to include native modules.
+
+---
+
+## Contributing
+
+Contributions are welcome. If you want to help:
+
+1. Check open issues and feature requests.
+2. Run the benchmarks and add **device-specific results when possible.**
+3. Open PRs for bugfixes, new algos, docs, or CI improvements.
+
+Please follow the code style and include tests for numeric changes.
+
+---
+
+## Known limitations
+
+* Experimental API surface; breaking changes are possible.
+* Not optimized for tiny arrays or scalar-bound loops.
+* Platform FP consistency is not guaranteed — validate on target devices.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).

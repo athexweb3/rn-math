@@ -35,7 +35,11 @@
     "lint-ci": "eslint \"**/*.{js,ts,tsx}\" -f @jamesacarr/github-actions",
     "typescript": "tsc",
     "specs": "tsc --noEmit false && nitrogen --logLevel=\"debug\"",
-    "md": "tree -I 'node_modules|example' > project-tree.txt"
+    "md": "tree -I 'node_modules|example' > project-tree.txt",
+    "release": "release-it",
+    "release:patch": "release-it patch",
+    "release:minor": "release-it minor",
+    "release:major": "release-it major"
   },
   "keywords": [
     "react-native",
@@ -65,6 +69,7 @@
     "react": "19.1.1",
     "react-native": "0.82.0",
     "react-native-nitro-modules": "*",
+    "release-it": "^19.0.6",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
